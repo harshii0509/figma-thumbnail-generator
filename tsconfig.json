@@ -1,11 +1,18 @@
 {
   "compilerOptions": {
     "target": "es6",
+    "module": "commonjs",
     "lib": ["es6"],
     "strict": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "moduleResolution": "node",
     "typeRoots": [
       "./node_modules/@types",
       "./node_modules/@figma"
     ]
-  }
+  },
+  "include": [
+    "src/**/*"
+  ]
 }

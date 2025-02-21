@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Thumbnail Generator</title>
+    <!-- Add Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        padding: 20px;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      textarea {
+        height: 80px;
+        resize: vertical;
+      }
+      button {
+        background-color: #18a0fb;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+      }
+      button:hover {
+        background-color: #0d8de3;
+      }
+      .control-group {
+        margin-bottom: 16px;
+      }
+      .control-group label {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12px;
+        color: #333;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .row > * {
+        flex: 1;
+      }
+      /* Add new styles */
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-text {
+        font-size: 11px;
+        color: #666;
+      }
+
+      .toggle-button {
+        background-color: #f5f5f5;
+        border: 1px solid #ddd;
+        padding: 4px 8px;
+        cursor: pointer;
+        color: #333;
+        width: auto;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+      }
+
+      .toggle-button:hover {
+        background-color: #e8e8e8;
+        color: #18a0fb;
+      }
+
+      .toggle-button.active {
+        background-color: #e3f2fd;
+        color: #18a0fb;
+        border-color: #18a0fb;
+      }
+
+      .toggle-text {
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .description-section {
+        display: none;
+      }
+
+      .description-section.active {
+        display: block;
+      }
+
+      i {
+        font-size: 16px;
+      }
+
+      /* Updated Preview styles */
+      .preview-container {
+        margin-bottom: 24px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #edf0f2;
+      }
+
+      .preview-header {
+        padding: 8px 12px;
+        background-color: #1e1e1e;
+        font-size: 12px;
+        color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .preview-canvas {
+        position: relative;
+        width: 280px; /* Container width */
+        height: 140px; /* Maintain 2:1 ratio (280/2 = 140) */
+        margin: 16px auto;
+        background: #ffffff; /* Default white background */
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .preview-canvas.with-gradient::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0) 0%,
+          rgba(0, 0, 0, 0.7) 100%
+        );
+        pointer-events: none;
+      }
+
+      .preview-content {
+        position: absolute;
+        left: 22px; /* Scaled from 160px (160 * 280/1920 ≈ 22) */
+        right: 22px;
+        transition: all 0.3s ease;
+      }
+
+      .preview-heading {
+        font-family: inherit;
+        word-break: break-word;
+        line-height: 1.2;
+        margin-bottom: 3px;
+        color: #000000; /* Default black color */
+      }
+
+      .preview-description {
+        font-family: inherit;
+        word-break: break-word;
+        line-height: 1.4;
+        opacity: 1; /* Changed from 0.8 to 1 for better visibility */
+        color: #000000; /* Default black color */
+      }
+
+      /* Remove the safe area visual guide since it's not shown in Figma's UI */
+      .safe-area {
+        display: none;
+      }
+
+      .background-section,
+      .heading-section {
+        display: none;
+      }
+
+      .background-section.active,
+      .heading-section.active {
+        display: block;
+      }
+
+      .color-input-group {
+        flex: 1;
+      }
+
+      .gradient-toggle {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .gradient-toggle input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+      }
+
+      /* Update preview styles */
+      .preview-canvas {
+        background: white; /* Default background */
+      }
+
+      .preview-canvas.with-gradient::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0) 0%,
+          rgba(0, 0, 0, 0.7) 100%
+        );
+        pointer-events: none;
+      }
+
+      .position-select {
+        width: auto;
+        min-width: 100px;
+      }
+
+      .position-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .position-row label {
+        margin-bottom: 0;
+        white-space: nowrap;
+      }
+
+      .position-input-group {
+        flex: 1;
+      }
+
+      .position-input-group select {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Create Thumbnail</h3>
+
+    <div class="preview-container">
+      <div class="preview-header">Preview</div>
+      <div class="preview-canvas">
+        <div class="preview-content">
+          <div class="preview-heading"></div>
+          <div class="preview-description"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add this after the preview section and before the heading section -->
+    <div class="control-group">
+      <div class="section-header">
+        <div class="header-left">
+          <label>Background</label>
+        </div>
+        <button
+          class="toggle-button"
+          id="toggleBackground"
+          title="Toggle Background Options"
+        >
+          <i class="ph-bold ph-eye-slash"></i>
+          <span class="toggle-text">Show</span>
+        </button>
+      </div>
+      <div class="background-section" id="backgroundSection">
+        <div class="row">
+          <div class="color-input-group">
+            <label>Color</label>
+            <input type="color" id="backgroundColor" value="#FFFFFF" />
+          </div>
+          <div class="gradient-toggle">
+            <label>Gradient Overlay</label>
+            <input type="checkbox" id="gradientOverlay" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Update the heading section to match the pattern -->
+    <div class="control-group">
+      <div class="section-header">
+        <div class="header-left">
+          <label>Heading</label>
+          <span class="status-text">(Required)</span>
+        </div>
+        <button
+          class="toggle-button"
+          id="toggleHeading"
+          title="Toggle Heading Options"
+        >
+          <i class="ph-bold ph-eye-slash"></i>
+          <span class="toggle-text">Show</span>
+        </button>
+      </div>
+      <div class="heading-section" id="headingSection">
+        <textarea id="heading" placeholder="Enter heading text"></textarea>
+        <div class="row">
+          <div class="position-input-group">
+            <label>Position</label>
+            <select id="headingPosition">
+              <option value="top">Top</option>
+              <option value="middle">Middle</option>
+              <option value="bottom" selected>Bottom</option>
+            </select>
+          </div>
+          <select id="headingFont">
+            <option value="Inter">Inter</option>
+            <option value="Helvetica Neue">Helvetica Neue</option>
+            <option value="Arial">Arial</option>
+          </select>
+          <select id="headingWeight">
+            <option value="Regular">Regular</option>
+            <option value="Medium">Medium</option>
+            <option value="Semi Bold">Semi Bold</option>
+            <option value="Bold">Bold</option>
+          </select>
+          <input type="number" id="headingSize" value="60" min="24" max="120" />
+          <input type="color" id="headingColor" value="#000000" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Description Section -->
+    <div class="control-group">
+      <div class="section-header">
+        <div class="header-left">
+          <label>Description</label>
+          <span class="status-text">(Optional)</span>
+        </div>
+        <button
+          class="toggle-button"
+          id="toggleDescription"
+          title="Toggle Description"
+        >
+          <i class="ph-bold ph-eye-slash"></i>
+          <span class="toggle-text">Show</span>
+        </button>
+      </div>
+      <div class="description-section" id="descriptionSection">
+        <textarea
+          id="description"
+          placeholder="Enter description text"
+        ></textarea>
+        <div class="row">
+          <div class="position-input-group">
+            <label>Position</label>
+            <select id="descriptionPosition">
+              <option value="below-heading" selected>Below Heading</option>
+              <option value="above-heading">Above Heading</option>
+            </select>
+          </div>
+          <select id="descriptionFont">
+            <option value="Inter">Inter</option>
+            <option value="Helvetica Neue">Helvetica Neue</option>
+            <option value="Arial">Arial</option>
+          </select>
+          <select id="descriptionWeight">
+            <option value="Regular">Regular</option>
+            <option value="Medium">Medium</option>
+            <option value="Semi Bold">Semi Bold</option>
+            <option value="Bold">Bold</option>
+          </select>
+          <input
+            type="number"
+            id="descriptionSize"
+            value="32"
+            min="16"
+            max="64"
+          />
+          <input type="color" id="descriptionColor" value="#000000" />
+        </div>
+      </div>
+    </div>
+
+    <button id="generate">Generate Thumbnail</button>
+
+    <script>
+      // Add all toggle-related variables at the top
+      let isDescriptionActive = false;
+      let isBackgroundActive = false;
+      let isHeadingActive = false;
+
+      const toggleDescription = document.getElementById("toggleDescription");
+      const toggleBackground = document.getElementById("toggleBackground");
+      const toggleHeading = document.getElementById("toggleHeading");
+
+      const descriptionSection = document.getElementById("descriptionSection");
+      const backgroundSection = document.getElementById("backgroundSection");
+      const headingSection = document.getElementById("headingSection");
+
+      // Function to handle section toggle
+      function toggleSection(isActive, section, button) {
+        isActive = !isActive;
+        section.classList.toggle("active");
+        button.classList.toggle("active");
+
+        const icon = button.querySelector("i");
+        const text = button.querySelector(".toggle-text");
+
+        if (isActive) {
+          icon.className = "ph-bold ph-eye";
+          text.textContent = "Hide";
+        } else {
+          icon.className = "ph-bold ph-eye-slash";
+          text.textContent = "Show";
+        }
+
+        return isActive;
+      }
+
+      // Add toggle handlers
+      toggleBackground.onclick = () => {
+        isBackgroundActive = toggleSection(
+          isBackgroundActive,
+          backgroundSection,
+          toggleBackground
+        );
+        updatePreview();
+      };
+
+      toggleHeading.onclick = () => {
+        isHeadingActive = toggleSection(
+          isHeadingActive,
+          headingSection,
+          toggleHeading
+        );
+        updatePreview();
+      };
+
+      toggleDescription.onclick = () => {
+        isDescriptionActive = toggleSection(
+          isDescriptionActive,
+          descriptionSection,
+          toggleDescription
+        );
+        updatePreview();
+      };
+
+      // Rest of your existing code...
+      const previewHeading = document.querySelector(".preview-heading");
+      const previewDescription = document.querySelector(".preview-description");
+      const previewCanvas = document.querySelector(".preview-canvas");
+
+      // Scale factor for preview (280/1920 ≈ 0.14583333333333334)
+      const SCALE_FACTOR = 0.14583333333333334;
+
+      // Function to update preview
+      function updatePreview() {
+        const heading = document.getElementById("heading").value;
+        const previewHeading = document.querySelector(".preview-heading");
+        const previewDescription = document.querySelector(
+          ".preview-description"
+        );
+        const previewCanvas = document.querySelector(".preview-canvas");
+        const previewContent = document.querySelector(".preview-content");
+
+        // Update heading preview
+        previewHeading.textContent = heading;
+        previewHeading.style.fontSize =
+          parseInt(document.getElementById("headingSize").value) *
+            SCALE_FACTOR +
+          "px";
+        previewHeading.style.fontFamily =
+          document.getElementById("headingFont").value;
+        previewHeading.style.fontWeight =
+          document.getElementById("headingWeight").value === "Bold"
+            ? "700"
+            : "400";
+        previewHeading.style.color =
+          document.getElementById("headingColor").value;
+
+        // Update description preview
+        const description = document.getElementById("description").value;
+        if (isDescriptionActive && description) {
+          previewDescription.style.display = "block";
+          previewDescription.textContent = description;
+          previewDescription.style.fontSize =
+            parseInt(document.getElementById("descriptionSize").value) *
+              SCALE_FACTOR +
+            "px";
+          previewDescription.style.fontFamily =
+            document.getElementById("descriptionFont").value;
+          previewDescription.style.fontWeight =
+            document.getElementById("descriptionWeight").value === "Bold"
+              ? "700"
+              : "400";
+          previewDescription.style.color =
+            document.getElementById("descriptionColor").value;
+        } else {
+          previewDescription.style.display = "none";
+        }
+
+        // Update background
+        const backgroundColor =
+          document.getElementById("backgroundColor").value;
+        const hasGradient = document.getElementById("gradientOverlay").checked;
+
+        previewCanvas.style.background = backgroundColor;
+        previewCanvas.classList.toggle("with-gradient", hasGradient);
+
+        // Update positions in preview
+        const headingPosition =
+          document.getElementById("headingPosition").value;
+        const descriptionPosition = document.getElementById(
+          "descriptionPosition"
+        ).value;
+
+        // Position the preview content based on heading position
+        switch (headingPosition) {
+          case "top":
+            previewContent.style.top = "16px";
+            previewContent.style.bottom = "auto";
+            previewContent.style.transform = "none";
+            break;
+          case "middle":
+            previewContent.style.top = "50%";
+            previewContent.style.bottom = "auto";
+            previewContent.style.transform = "translateY(-50%)";
+            break;
+          case "bottom":
+            previewContent.style.top = "auto";
+            previewContent.style.bottom = "16px";
+            previewContent.style.transform = "none";
+            break;
+        }
+
+        // Arrange heading and description order
+        if (descriptionPosition === "above-heading") {
+          previewContent.insertBefore(previewDescription, previewHeading);
+        } else {
+          previewContent.insertBefore(previewHeading, previewDescription);
+        }
+      }
+
+      // Add event listeners for live updates
+      document
+        .getElementById("heading")
+        .addEventListener("input", updatePreview);
+      document
+        .getElementById("headingFont")
+        .addEventListener("change", updatePreview);
+      document
+        .getElementById("headingWeight")
+        .addEventListener("change", updatePreview);
+      document
+        .getElementById("headingSize")
+        .addEventListener("change", updatePreview);
+      document
+        .getElementById("headingColor")
+        .addEventListener("input", updatePreview);
+
+      document
+        .getElementById("description")
+        .addEventListener("input", updatePreview);
+      document
+        .getElementById("descriptionFont")
+        .addEventListener("change", updatePreview);
+      document
+        .getElementById("descriptionWeight")
+        .addEventListener("change", updatePreview);
+      document
+        .getElementById("descriptionSize")
+        .addEventListener("change", updatePreview);
+      document
+        .getElementById("descriptionColor")
+        .addEventListener("input", updatePreview);
+
+      // Add event listeners for position controls
+      document
+        .getElementById("headingPosition")
+        .addEventListener("change", updatePreview);
+      document
+        .getElementById("descriptionPosition")
+        .addEventListener("change", updatePreview);
+
+      // Initial preview update
+      updatePreview();
+
+      // Show heading section by default since it's required
+      isHeadingActive = toggleSection(
+        isHeadingActive,
+        headingSection,
+        toggleHeading
+      );
+
+      const generateButton = document.getElementById("generate");
+      generateButton.onclick = () => {
+        const heading = document.getElementById("heading").value;
+        if (!heading) {
+          alert("Heading is required!");
+          return;
+        }
+
+        const description = isDescriptionActive
+          ? document.getElementById("description").value
+          : "";
+
+        // Get heading styles
+        const headingFont = document.getElementById("headingFont").value;
+        const headingWeight = document.getElementById("headingWeight").value;
+        const headingSize = parseInt(
+          document.getElementById("headingSize").value
+        );
+        const headingColor = document.getElementById("headingColor").value;
+
+        // Get description styles only if active
+        const descriptionStyles = isDescriptionActive
+          ? {
+              font: document.getElementById("descriptionFont").value,
+              weight: document.getElementById("descriptionWeight").value,
+              size: parseInt(document.getElementById("descriptionSize").value),
+              color: document.getElementById("descriptionColor").value,
+            }
+          : null;
+
+        // Add background styles
+        const backgroundStyles = {
+          color: document.getElementById("backgroundColor").value,
+          gradient: document.getElementById("gradientOverlay").checked,
+        };
+
+        // Get position information
+        const headingPosition =
+          document.getElementById("headingPosition").value;
+        const descriptionPosition = document.getElementById(
+          "descriptionPosition"
+        ).value;
+
+        // Send message to plugin code
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: "generate-thumbnail",
+              heading,
+              description,
+              styles: {
+                heading: {
+                  font: headingFont,
+                  weight: headingWeight,
+                  size: headingSize,
+                  color: headingColor,
+                  position: headingPosition,
+                },
+                description: descriptionStyles
+                  ? {
+                      ...descriptionStyles,
+                      position: descriptionPosition,
+                    }
+                  : null,
+                background: backgroundStyles,
+              },
+            },
+          },
+          "*"
+        );
+      };
+
+      // Add background control listeners
+      document
+        .getElementById("backgroundColor")
+        .addEventListener("input", updatePreview);
+      document
+        .getElementById("gradientOverlay")
+        .addEventListener("change", updatePreview);
+    </script>
+  </body>
+</html>
