@@ -26,6 +26,7 @@ async function createThumbnailCanvas(
     heading: { font: string; weight: string; size: number; color: string; position: string };
     description: { font: string; weight: string; size: number; color: string; position: string } | null;
     background: { color: string; gradient: boolean };
+    tags: { text: string; position: string; color: string }[] | null;
   }
 ) {
   // Load fonts first
@@ -106,6 +107,39 @@ async function createThumbnailCanvas(
     if (descriptionText) {
       descriptionText.x = 160;
       descriptionText.y = headingText.y + headingText.height + 24;
+    }
+  }
+
+  // Create and position tags
+  if (styles.tags) {
+    const tagSpacing = 12; // Space between tags
+    let currentX = 160; // Starting X position
+    
+    for (const tagStyle of styles.tags) {
+      if (!tagStyle.text) continue;
+
+      const tagText = figma.createText();
+      tagText.characters = tagStyle.text;
+      tagText.fontSize = 16; // Fixed size for tags
+      tagText.fills = [{ type: 'SOLID', color: hexToRgb(tagStyle.color) }];
+      
+      // Position tag based on its position setting
+      switch(tagStyle.position) {
+        case 'top':
+          tagText.y = 60;
+          break;
+        case 'above-heading':
+          tagText.y = headingText.y - 40;
+          break;
+        case 'bottom':
+          tagText.y = frame.height - 60;
+          break;
+      }
+      
+      tagText.x = currentX;
+      currentX += tagText.width + tagSpacing;
+      
+      frame.appendChild(tagText);
     }
   }
 

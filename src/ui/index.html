@@ -119,7 +119,7 @@
         margin-bottom: 24px;
         border-radius: 8px;
         overflow: hidden;
-        background: #edf0f2;
+        background: none;
       }
 
       .preview-header {
@@ -130,15 +130,16 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        border-radius: 8px 8px 0 0;
       }
 
       .preview-canvas {
         position: relative;
-        width: 280px; /* Container width */
-        height: 140px; /* Maintain 2:1 ratio (280/2 = 140) */
-        margin: 16px auto;
-        background: #ffffff; /* Default white background */
-        border-radius: 4px;
+        width: 280px;
+        height: 140px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 0 0 8px 8px;
         overflow: hidden;
       }
 
@@ -213,7 +214,7 @@
 
       /* Update preview styles */
       .preview-canvas {
-        background: white; /* Default background */
+        background: white;
       }
 
       .preview-canvas.with-gradient::after {
@@ -255,13 +256,25 @@
       .position-input-group select {
         width: 100%;
       }
+
+      /* Remove tag-related styles */
+      .tags-section,
+      .tag-item,
+      .tag-header,
+      .tag-title,
+      .remove-tag,
+      .add-tag-button {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <h3>Create Thumbnail</h3>
 
     <div class="preview-container">
-      <div class="preview-header">Preview</div>
+      <div class="preview-header">
+        Preview
+      </div>
       <div class="preview-canvas">
         <div class="preview-content">
           <div class="preview-heading"></div>
@@ -270,17 +283,13 @@
       </div>
     </div>
 
-    <!-- Add this after the preview section and before the heading section -->
+    <!-- Background Section -->
     <div class="control-group">
       <div class="section-header">
         <div class="header-left">
           <label>Background</label>
         </div>
-        <button
-          class="toggle-button"
-          id="toggleBackground"
-          title="Toggle Background Options"
-        >
+        <button class="toggle-button" id="toggleBackground" title="Toggle Background">
           <i class="ph-bold ph-eye-slash"></i>
           <span class="toggle-text">Show</span>
         </button>
@@ -299,18 +308,13 @@
       </div>
     </div>
 
-    <!-- Update the heading section to match the pattern -->
+    <!-- Heading Section -->
     <div class="control-group">
       <div class="section-header">
         <div class="header-left">
           <label>Heading</label>
-          <span class="status-text">(Required)</span>
         </div>
-        <button
-          class="toggle-button"
-          id="toggleHeading"
-          title="Toggle Heading Options"
-        >
+        <button class="toggle-button" id="toggleHeading" title="Toggle Heading">
           <i class="ph-bold ph-eye-slash"></i>
           <span class="toggle-text">Show</span>
         </button>
@@ -350,11 +354,7 @@
           <label>Description</label>
           <span class="status-text">(Optional)</span>
         </div>
-        <button
-          class="toggle-button"
-          id="toggleDescription"
-          title="Toggle Description"
-        >
+        <button class="toggle-button" id="toggleDescription" title="Toggle Description">
           <i class="ph-bold ph-eye-slash"></i>
           <span class="toggle-text">Show</span>
         </button>
@@ -398,22 +398,26 @@
     <button id="generate">Generate Thumbnail</button>
 
     <script>
-      // Add all toggle-related variables at the top
-      let isDescriptionActive = false;
+      // Initialize state variables
       let isBackgroundActive = false;
       let isHeadingActive = false;
+      let isDescriptionActive = false;
 
-      const toggleDescription = document.getElementById("toggleDescription");
+      // Get DOM elements
       const toggleBackground = document.getElementById("toggleBackground");
       const toggleHeading = document.getElementById("toggleHeading");
+      const toggleDescription = document.getElementById("toggleDescription");
 
-      const descriptionSection = document.getElementById("descriptionSection");
       const backgroundSection = document.getElementById("backgroundSection");
       const headingSection = document.getElementById("headingSection");
+      const descriptionSection = document.getElementById("descriptionSection");
+
+      // Scale factor for preview (280/1920 ≈ 0.14583333333333334)
+      const SCALE_FACTOR = 0.14583333333333334;
 
       // Function to handle section toggle
-      function toggleSection(isActive, section, button) {
-        isActive = !isActive;
+      function toggleSection(button, section) {
+        const isActive = !section.classList.contains("active");
         section.classList.toggle("active");
         button.classList.toggle("active");
 
@@ -431,180 +435,80 @@
         return isActive;
       }
 
-      // Add toggle handlers
-      toggleBackground.onclick = () => {
-        isBackgroundActive = toggleSection(
-          isBackgroundActive,
-          backgroundSection,
-          toggleBackground
-        );
+      // Add click event listeners for all toggle buttons
+      toggleBackground.addEventListener("click", () => {
+        isBackgroundActive = toggleSection(toggleBackground, backgroundSection);
         updatePreview();
-      };
+      });
 
-      toggleHeading.onclick = () => {
-        isHeadingActive = toggleSection(
-          isHeadingActive,
-          headingSection,
-          toggleHeading
-        );
+      toggleHeading.addEventListener("click", () => {
+        isHeadingActive = toggleSection(toggleHeading, headingSection);
         updatePreview();
-      };
+      });
 
-      toggleDescription.onclick = () => {
-        isDescriptionActive = toggleSection(
-          isDescriptionActive,
-          descriptionSection,
-          toggleDescription
-        );
+      toggleDescription.addEventListener("click", () => {
+        isDescriptionActive = toggleSection(toggleDescription, descriptionSection);
         updatePreview();
-      };
-
-      // Rest of your existing code...
-      const previewHeading = document.querySelector(".preview-heading");
-      const previewDescription = document.querySelector(".preview-description");
-      const previewCanvas = document.querySelector(".preview-canvas");
-
-      // Scale factor for preview (280/1920 ≈ 0.14583333333333334)
-      const SCALE_FACTOR = 0.14583333333333334;
+      });
 
       // Function to update preview
       function updatePreview() {
         const heading = document.getElementById("heading").value;
         const previewHeading = document.querySelector(".preview-heading");
-        const previewDescription = document.querySelector(
-          ".preview-description"
-        );
+        const previewDescription = document.querySelector(".preview-description");
         const previewCanvas = document.querySelector(".preview-canvas");
-        const previewContent = document.querySelector(".preview-content");
 
         // Update heading preview
-        previewHeading.textContent = heading;
-        previewHeading.style.fontSize =
-          parseInt(document.getElementById("headingSize").value) *
-            SCALE_FACTOR +
-          "px";
-        previewHeading.style.fontFamily =
-          document.getElementById("headingFont").value;
-        previewHeading.style.fontWeight =
-          document.getElementById("headingWeight").value === "Bold"
-            ? "700"
-            : "400";
-        previewHeading.style.color =
-          document.getElementById("headingColor").value;
+        if (isHeadingActive) {
+          previewHeading.style.display = "block";
+          previewHeading.textContent = heading;
+          previewHeading.style.fontSize = 
+            parseInt(document.getElementById("headingSize").value) * SCALE_FACTOR + "px";
+          previewHeading.style.fontFamily = document.getElementById("headingFont").value;
+          previewHeading.style.fontWeight = 
+            document.getElementById("headingWeight").value === "Bold" ? "700" : "400";
+          previewHeading.style.color = document.getElementById("headingColor").value;
+        } else {
+          previewHeading.style.display = "none";
+        }
 
         // Update description preview
         const description = document.getElementById("description").value;
         if (isDescriptionActive && description) {
           previewDescription.style.display = "block";
           previewDescription.textContent = description;
-          previewDescription.style.fontSize =
-            parseInt(document.getElementById("descriptionSize").value) *
-              SCALE_FACTOR +
-            "px";
-          previewDescription.style.fontFamily =
-            document.getElementById("descriptionFont").value;
-          previewDescription.style.fontWeight =
-            document.getElementById("descriptionWeight").value === "Bold"
-              ? "700"
-              : "400";
-          previewDescription.style.color =
-            document.getElementById("descriptionColor").value;
+          previewDescription.style.fontSize = 
+            parseInt(document.getElementById("descriptionSize").value) * SCALE_FACTOR + "px";
+          previewDescription.style.fontFamily = document.getElementById("descriptionFont").value;
+          previewDescription.style.fontWeight = 
+            document.getElementById("descriptionWeight").value === "Bold" ? "700" : "400";
+          previewDescription.style.color = document.getElementById("descriptionColor").value;
         } else {
           previewDescription.style.display = "none";
         }
 
         // Update background
-        const backgroundColor =
-          document.getElementById("backgroundColor").value;
-        const hasGradient = document.getElementById("gradientOverlay").checked;
-
-        previewCanvas.style.background = backgroundColor;
-        previewCanvas.classList.toggle("with-gradient", hasGradient);
-
-        // Update positions in preview
-        const headingPosition =
-          document.getElementById("headingPosition").value;
-        const descriptionPosition = document.getElementById(
-          "descriptionPosition"
-        ).value;
-
-        // Position the preview content based on heading position
-        switch (headingPosition) {
-          case "top":
-            previewContent.style.top = "16px";
-            previewContent.style.bottom = "auto";
-            previewContent.style.transform = "none";
-            break;
-          case "middle":
-            previewContent.style.top = "50%";
-            previewContent.style.bottom = "auto";
-            previewContent.style.transform = "translateY(-50%)";
-            break;
-          case "bottom":
-            previewContent.style.top = "auto";
-            previewContent.style.bottom = "16px";
-            previewContent.style.transform = "none";
-            break;
-        }
-
-        // Arrange heading and description order
-        if (descriptionPosition === "above-heading") {
-          previewContent.insertBefore(previewDescription, previewHeading);
+        if (isBackgroundActive) {
+          previewCanvas.style.backgroundColor = document.getElementById("backgroundColor").value;
+          previewCanvas.classList.toggle(
+            "with-gradient",
+            document.getElementById("gradientOverlay").checked
+          );
         } else {
-          previewContent.insertBefore(previewHeading, previewDescription);
+          previewCanvas.style.backgroundColor = "#ffffff";
+          previewCanvas.classList.remove("with-gradient");
         }
       }
 
-      // Add event listeners for live updates
-      document
-        .getElementById("heading")
-        .addEventListener("input", updatePreview);
-      document
-        .getElementById("headingFont")
-        .addEventListener("change", updatePreview);
-      document
-        .getElementById("headingWeight")
-        .addEventListener("change", updatePreview);
-      document
-        .getElementById("headingSize")
-        .addEventListener("change", updatePreview);
-      document
-        .getElementById("headingColor")
-        .addEventListener("input", updatePreview);
-
-      document
-        .getElementById("description")
-        .addEventListener("input", updatePreview);
-      document
-        .getElementById("descriptionFont")
-        .addEventListener("change", updatePreview);
-      document
-        .getElementById("descriptionWeight")
-        .addEventListener("change", updatePreview);
-      document
-        .getElementById("descriptionSize")
-        .addEventListener("change", updatePreview);
-      document
-        .getElementById("descriptionColor")
-        .addEventListener("input", updatePreview);
-
-      // Add event listeners for position controls
-      document
-        .getElementById("headingPosition")
-        .addEventListener("change", updatePreview);
-      document
-        .getElementById("descriptionPosition")
-        .addEventListener("change", updatePreview);
-
-      // Initial preview update
+      // Show heading section by default
+      isHeadingActive = toggleSection(toggleHeading, headingSection);
       updatePreview();
 
-      // Show heading section by default since it's required
-      isHeadingActive = toggleSection(
-        isHeadingActive,
-        headingSection,
-        toggleHeading
-      );
+      // Add event listeners for all inputs
+      document.querySelectorAll('input, select, textarea').forEach(input => {
+        input.addEventListener('input', updatePreview);
+        input.addEventListener('change', updatePreview);
+      });
 
       const generateButton = document.getElementById("generate");
       generateButton.onclick = () => {
@@ -677,14 +581,6 @@
           "*"
         );
       };
-
-      // Add background control listeners
-      document
-        .getElementById("backgroundColor")
-        .addEventListener("input", updatePreview);
-      document
-        .getElementById("gradientOverlay")
-        .addEventListener("change", updatePreview);
     </script>
   </body>
 </html>
