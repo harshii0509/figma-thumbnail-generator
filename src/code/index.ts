@@ -1,5 +1,9 @@
 // Show the UI. If you bundled the UI as HTML, replace __html__ with the correct reference
-figma.showUI(__html__, { width: 320, height: 640 }); // Increased height to show preview and all controls
+figma.showUI(__html__, { 
+  width: 600, 
+  height: 550,
+  themeColors: true 
+});
 
 // Add constants for safe space at the top of the file
 const SAFE_SPACE = {
@@ -17,24 +21,11 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   } : { r: 0, g: 0, b: 0 };
 }
 
-// Listen for messages from the UI
+// Simplified message handler
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'generate-thumbnail') {
     const { heading, description, styles } = msg;
     await createThumbnailCanvas(heading, description, styles);
-  } else if (msg.type === 'generate-ai-thumbnail') {
-    try {
-      const response = await generateAIThumbnail(msg.prompt, msg.includeBackground);
-      figma.ui.postMessage({
-        type: 'ai-generation-complete',
-        ...response
-      });
-    } catch (error) {
-      figma.ui.postMessage({
-        type: 'ai-generation-error',
-        error: error.message
-      });
-    }
   }
 };
 
@@ -63,14 +54,6 @@ type Styles = {
     items: Contributor[];
     displayMode: 'avatars-only' | 'names-only' | 'both';
   };
-}
-
-// Add these type definitions
-type AIGenerationResponse = {
-  heading: string;
-  description: string;
-  backgroundColor?: string;
-  backgroundImage?: Uint8Array;
 }
 
 async function createThumbnailCanvas(
@@ -373,73 +356,4 @@ async function createThumbnailCanvas(
 
   figma.viewport.scrollAndZoomIntoView([frame]);
   figma.closePlugin();
-}
-
-// Add this function to handle AI generation
-async function generateAIThumbnail(prompt: string, includeBackground: boolean): Promise<AIGenerationResponse> {
-  // You'll need to implement the actual API calls to OpenAI here
-  // This is a placeholder for the API integration
-  try {
-    // Generate heading and description using GPT-4
-    const contentResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer YOUR_OPENAI_API_KEY'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [{
-          role: 'system',
-          content: 'You are a thumbnail content generator. Generate a compelling heading and description for thumbnails.'
-        }, {
-          role: 'user',
-          content: `Generate a thumbnail heading (max 50 chars) and description (max 120 chars) for: ${prompt}`
-        }],
-        temperature: 0.7
-      })
-    });
-
-    const contentData = await contentResponse.json();
-    const [heading, description] = contentData.choices[0].message.content.split('\n');
-
-    let backgroundColor = '#FFFFFF';
-    let backgroundImage: Uint8Array | undefined;
-
-    if (includeBackground) {
-      // Generate background image using DALL-E 3
-      const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_OPENAI_API_KEY'
-        },
-        body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt: `Generate a subtle, professional background image for a thumbnail with the heading: ${heading}`,
-          size: '1792x1024',
-          quality: 'standard',
-          n: 1
-        })
-      });
-
-      const imageData = await imageResponse.json();
-      const imageUrl = imageData.data[0].url;
-
-      // Download the generated image
-      const imageDownload = await fetch(imageUrl);
-      const arrayBuffer = await imageDownload.arrayBuffer();
-      backgroundImage = new Uint8Array(arrayBuffer);
-    }
-
-    return {
-      heading,
-      description,
-      backgroundColor,
-      backgroundImage
-    };
-  } catch (error) {
-    console.error('AI Generation Error:', error);
-    throw new Error('Failed to generate thumbnail content');
-  }
 }

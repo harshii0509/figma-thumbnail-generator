@@ -4,13 +4,150 @@
     <meta charset="utf-8" />
     <title>Thumbnail Generator</title>
     <!-- Add Phosphor Icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- <script src="https://unpkg.com/@phosphor-icons/web"></script> -->
     <style>
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
           sans-serif;
-        padding: 20px;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        width: 600px;
+        height: 550px;
       }
+
+      /* Main content area */
+      .main-content {
+        width: 300px;
+        height: 550px;
+        padding: 16px 12px 16px 12px;
+        border-right: 1px solid #E1E4EA;
+        box-sizing: border-box;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .main-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2B303B;
+        margin: 0 0 16px 0;
+        flex-shrink: 0;
+      }
+
+      /* Preview panel */
+      .preview-panel {
+        width: 300px;
+        height: 550px;
+        padding: 16px 12px;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+      }
+
+      .preview-header {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2B303B;
+        margin-bottom: 16px;
+      }
+
+      .preview-content {
+        width: 240px; /* Base width for preview */
+        height: 135px; /* Maintains 16:9 ratio (240 * 9/16) */
+        background: white;
+        border: 1px solid #E1E4EA;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px auto;
+        box-sizing: border-box;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .preview-placeholder {
+        font-size: 13px;
+        color: #99A0AE;
+        text-align: center;
+        padding: 0 24px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Section styles */
+      .section {
+        background: white;
+        border: 1px solid #E1E4EA;
+        border-radius: 8px;
+        padding: 10px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin: 0;
+        
+      }
+
+      .section:hover {
+        background-color: #F2F5F8;
+        transition: background-color 0.2s ease-in-out;
+      }
+
+      .section-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: #2B303B;
+        margin: 0 0 4px 0;
+        line-height: 120%;
+      }
+
+      .section-description {
+        font-size: 10px;
+        color: #99A0AE;
+        margin: 0;
+        font-weight: 400;
+        line-height: 120%;
+      }
+
+      /* Button styles */
+      .button-container {
+        margin-top: 24px;
+        padding: 0;
+        border-top: none;
+        flex-shrink: 0;
+        justify-content: center;
+        align-items: center;
+      }
+
+      button#generate {
+        background: #E97135;
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.30);
+        box-shadow: 0px 0px 0px 1px #AD4E1F;
+        border-radius: 8px;
+        padding: 9px 12px 9px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        width: fit-content;
+      }
+
+      button#generate:hover {
+        background: #D65E26;
+        transition: background-color 0.2s ease;
+      }
+
+      /* Hide the old preview container */
+      .preview-container {
+        display: none;
+      }
+
       input,
       textarea,
       select {
@@ -23,15 +160,6 @@
       textarea {
         height: 80px;
         resize: vertical;
-      }
-      button {
-        background-color: #18a0fb;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        width: 100%;
       }
       button:hover {
         background-color: #0d8de3;
@@ -115,31 +243,12 @@
       }
 
       /* Updated Preview styles */
-      .preview-container {
-        margin-bottom: 24px;
-        border-radius: 8px;
-        overflow: hidden;
-        background: none;
-      }
-
-      .preview-header {
-        padding: 8px 12px;
-        background-color: #1e1e1e;
-        font-size: 12px;
-        color: #ffffff;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 8px 8px 0 0;
-      }
-
       .preview-canvas {
         position: relative;
-        width: 280px;
-        height: 140px;
-        margin: 0 auto;
+        width: 300px;
+        height: 200px;
+        margin: 16px 12px 16px 12px;
         background: #ffffff;
-        border-radius: 0 0 8px 8px;
         overflow: hidden;
       }
 
@@ -158,27 +267,19 @@
         pointer-events: none;
       }
 
-      .preview-content {
-        position: absolute;
-        left: 22px; /* Scaled from 160px (160 * 280/1920 ≈ 22) */
-        right: 22px;
-        transition: all 0.3s ease;
-      }
-
       .preview-heading {
-        font-family: inherit;
-        word-break: break-word;
+        font-size: calc(var(--heading-size, 32px) * 1);
         line-height: 1.2;
-        margin-bottom: 3px;
-        color: #000000; /* Default black color */
+        margin-bottom: 32px;
+        width: 100%;
+        text-align: center;
       }
 
       .preview-description {
-        font-family: inherit;
-        word-break: break-word;
+        font-size: calc(var(--description-size, 16px) * 1);
         line-height: 1.4;
-        opacity: 1; /* Changed from 0.8 to 1 for better visibility */
-        color: #000000; /* Default black color */
+        width: 100%;
+        text-align: center;
       }
 
       /* Remove the safe area visual guide since it's not shown in Figma's UI */
@@ -375,948 +476,456 @@
         margin-top: 8px;
       }
 
-      .ai-section {
-        margin-top: 16px;
-        padding: 16px;
-        background: #f9fafb;
-        border-radius: 8px;
-        border: 1px solid #eee;
-      }
-
-      .ai-prompt {
-        min-height: 80px;
-        margin-bottom: 12px;
-      }
-
-      .ai-options {
-        margin-bottom: 12px;
-      }
-
-      .checkbox-label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        color: #333;
-      }
-
-      .checkbox-label input[type="checkbox"] {
-        width: auto;
-        margin: 0;
-      }
-
-      .ai-generate-button {
-        background-color: #6366f1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-      }
-
-      .ai-generate-button:hover {
-        background-color: #4f46e5;
-      }
-
-      .ai-status {
-        margin-top: 12px;
-        font-size: 14px;
-        color: #666;
-      }
-
-      .ai-status.loading {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #6366f1;
-      }
-
-      .ai-status.error {
-        color: #ef4444;
-      }
-
-      .ai-status.success {
-        color: #22c55e;
-      }
-
+      /* Remove AI-related styles */
+      .ai-section,
+      .ai-content,
+      .ai-prompt,
+      .ai-options,
       .ask-ai-button {
-        margin-top: 8px;
-        background-color: #6366f1;
-      }
-
-      .ask-ai-button:hover {
-        background-color: #4f46e5;
-      }
-
-      .ai-modal {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: white;
-        padding: 20px;
-        z-index: 100;
-      }
-
-      .ai-modal.hidden {
         display: none;
       }
 
-      .ai-modal-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 20px;
-        gap: 12px;
-      }
-
-      .ai-modal-header h3 {
-        margin: 0;
-      }
-
-      .back-button {
-        background: none;
-        border: none;
-        color: #666;
-        padding: 4px;
-        width: auto;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        cursor: pointer;
-        font-size: 14px;
-      }
-
-      .back-button:hover {
-        color: #333;
-        background: none;
-      }
-
-      .breadcrumb {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 20px;
-        padding: 8px 0;
-        border-bottom: 1px solid #eee;
-      }
-
-      .breadcrumb-item {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 14px;
-        color: #666;
-      }
-
-      .breadcrumb-item.active {
-        color: #333;
-        font-weight: 500;
-      }
-
-      button.breadcrumb-item {
-        background: none;
-        border: none;
-        padding: 4px 8px;
-        width: auto;
-        cursor: pointer;
-        color: #6366f1;
-      }
-
-      button.breadcrumb-item:hover {
-        background: #f3f4f6;
-        border-radius: 4px;
-      }
-
-      .breadcrumb-separator {
-        color: #666;
-        font-size: 12px;
-      }
-
-      .ai-content {
-        animation: slideIn 0.3s ease;
-      }
-
-      @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateX(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-
-      .hidden {
-        display: none;
-      }
-
-      .pages-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        overflow-y: auto;
-      }
-
-      .page {
-        display: none;
-        padding: 20px;
-        min-height: 100%;
-      }
-
-      .page.active {
-        display: block;
-      }
-
-      .page-header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 24px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid #eee;
-      }
-
-      .page-header h3 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-      }
-
-      .back-button {
-        background: none;
-        border: none;
-        color: #666;
-        padding: 4px 8px;
-        width: auto;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        cursor: pointer;
-        font-size: 14px;
-      }
-
-      .back-button:hover {
-        color: #333;
-        background: #f5f5f5;
-        border-radius: 4px;
-      }
-
-      .ai-content {
-        animation: fadeIn 0.3s ease;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-
-      /* Update button positions */
-      #generate, #askAI {
-        position: sticky;
-        bottom: 20px;
-        margin-top: 16px;
-      }
-
-      .ask-ai-button {
-        margin-top: 8px;
-        background-color: #6366f1;
-      }
-
-      .ask-ai-button:hover {
-        background-color: #4f46e5;
-      }
-
-      /* Update button positions */
-      .button-container {
-        margin-top: 24px;
+      /* Section grid layout */
+      .sections-grid {
+        flex: 1;
         display: flex;
         flex-direction: column;
         gap: 8px;
+        overflow-y: auto;
+        padding-right: 8px;
       }
 
-      /* Remove old button margins */
-      #generate, #askAI {
-        margin-top: 0;
+      /* Update two-column layout */
+      .two-column-sections {
+        display: flex;
+        gap: 12px;
+        margin: 0;
       }
 
-      .button-container {
-        margin-top: 24px;
+      .two-column-sections .section {
+        flex: 1;
       }
 
-      .ask-ai-button {
-        margin-top: 24px;
-        background-color: #6366f1;
+      /* Update icon styles */
+      .section-icon {
+        width: 16px;
+        height: 16px;
+        margin-bottom: 12px;
+        color: #2B303B;
       }
 
-      .ask-ai-button:hover {
-        background-color: #4f46e5;
+      /* Add properties panel styles */
+      .properties-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
 
-      #generate {
-        margin-top: 0;
+      .properties-header {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2B303B;
+        flex-shrink: 0;
+      }
+
+      .properties-content {
+        flex: 1;
+        padding: 16px;
+        overflow-y: auto;
+      }
+
+      /* Property group styles */
+      .property-group {
+        margin-bottom: 16px;
+      }
+
+      .property-group-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: #2B303B;
+        margin-bottom: 8px;
+      }
+
+      /* Property input styles */
+      .property-input {
+        margin-bottom: 12px;
+      }
+
+      .property-input label {
+        display: block;
+        font-size: 11px;
+        color: #99A0AE;
+        margin-bottom: 4px;
+      }
+
+      .property-input input,
+      .property-input select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #E1E4EA;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #2B303B;
+      }
+
+      /* Color picker styles */
+      .color-picker-input {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .color-preview {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        border: 1px solid #E1E4EA;
+      }
+
+      /* Update preview elements container styles */
+      .preview-elements {
+        width: 1920px; /* Original width */
+        height: 1080px; /* Original height */
+        transform: scale(0.125); /* Scale down 1920 to 240 (240/1920 = 0.125) */
+        transform-origin: center center;
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        padding: 120px 160px; /* Match SAFE_SPACE from TypeScript */
+        box-sizing: border-box;
       }
     </style>
   </head>
   <body>
-    <h3>Create Thumbnail</h3>
-
-    <div class="preview-container">
-      <div class="preview-header">
-        Preview
-      </div>
-      <div class="preview-canvas">
-        <div class="preview-content">
-          <div class="preview-heading"></div>
-          <div class="preview-description"></div>
+    <!-- Main content area -->
+    <div class="main-content">
+      <h1 class="main-title">Thumbnail Generator</h1>
+      <div class="sections-grid">
+        <!-- Background section (full width) -->
+        <div class="section" id="backgroundSection">
+          <svg class="section-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.0001 8.7175L8.01072 13.7069C7.91786 13.7998 7.80761 13.8734 7.68627 13.9237C7.56493 13.974 7.43487 13.9998 7.30353 13.9998C7.17219 13.9998 7.04213 13.974 6.92079 13.9237C6.79945 13.8734 6.6892 13.7998 6.59634 13.7069L1.29322 8.40375C1.20034 8.31089 1.12666 8.20064 1.07639 8.0793C1.02612 7.95796 1.00024 7.8279 1.00024 7.69656C1.00024 7.56522 1.02612 7.43517 1.07639 7.31383C1.12666 7.19249 1.20034 7.08224 1.29322 6.98938L7.28259 1L14.5001 8.2175L13.0001 8.7175Z" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7.75 8.5C8.44036 8.5 9 7.94036 9 7.25C9 6.55964 8.44036 6 7.75 6C7.05964 6 6.5 6.55964 6.5 7.25C6.5 7.94036 7.05964 8.5 7.75 8.5Z" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6.86614 6.36625L2.49927 2" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M15.5 13C15.5 13.2652 15.3946 13.5196 15.2071 13.7071C15.0196 13.8946 14.7652 14 14.5 14C14.2348 14 13.9804 13.8946 13.7929 13.7071C13.6054 13.5196 13.5 13.2652 13.5 13C13.5 12 14.5 10.5 14.5 10.5C14.5 10.5 15.5 12 15.5 13Z" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          <div class="section-title">Background</div>
+          <div class="section-description">Customise the background</div>
         </div>
-      </div>
-    </div>
 
-    <!-- Background Section -->
-    <div class="control-group">
-      <div class="section-header">
-        <div class="header-left">
-          <label>Background</label>
-        </div>
-        <button class="toggle-button" id="toggleBackground" title="Toggle Background">
-          <i class="ph-bold ph-eye-slash"></i>
-          <span class="toggle-text">Show</span>
-        </button>
-      </div>
-      <div class="background-section" id="backgroundSection">
-        <div class="row">
-          <div class="color-input-group">
-            <label>Color</label>
-            <input type="color" id="backgroundColor" value="#FFFFFF" />
+        <!-- Two-column sections -->
+         <div class="two-column-sections"> 
+           <div class="section" id="headingSection">
+            <svg class="section-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2.5 3.5V11" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 7.25H2.5" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 3.5V11" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 13V7L12.5 8" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>              
+             <div class="section-title">Heading</div>
+             <div class="section-description">Add project heading</div>
+           </div>
+   
+           <div class="section" id="descriptionSection">
+            <svg class="section-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 3.5V12.5" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.5 5.5V3.5H12.5V5.5" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 12.5H10" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              
+             <div class="section-title">Description</div>
+             <div class="section-description">Add project description</div>
+           </div>
+         </div>
+
+         <div class="two-column-sections">
+          <div class="section" id="tagsSection">
+            <svg class="section-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2.64625 8.64625C2.55266 8.55255 2.50006 8.42556 2.5 8.29313V2.5H8.29313C8.42556 2.50006 8.55255 2.55266 8.64625 2.64625L14.8538 8.85375C14.9474 8.94751 15.0001 9.07464 15.0001 9.20719C15.0001 9.33974 14.9474 9.46687 14.8538 9.56063L9.5625 14.8538C9.46874 14.9474 9.34161 15.0001 9.20906 15.0001C9.07651 15.0001 8.94938 14.9474 8.85563 14.8538L2.64625 8.64625Z" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5.5 5.25C5.5 5.38807 5.38807 5.5 5.25 5.5C5.11193 5.5 5 5.38807 5 5.25C5 5.11193 5.11193 5 5.25 5C5.38807 5 5.5 5.11193 5.5 5.25Z" fill="#343330" stroke="#222530"/>
+              </svg>
+            <div class="section-title">Tags</div>
+            <div class="section-description">Add a project tags</div>
           </div>
-          <div class="gradient-toggle">
-            <label>Gradient Overlay</label>
-            <input type="checkbox" id="gradientOverlay" />
+
+          <div class="section" id="contributorsSection">
+            <svg class="section-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 10C10.2091 10 12 8.20914 12 6C12 3.79086 10.2091 2 8 2C5.79086 2 4 3.79086 4 6C4 8.20914 5.79086 10 8 10Z" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 13.5C3.21063 11.4081 5.40937 10 8 10C10.5906 10 12.7894 11.4081 14 13.5" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              
+            <div class="section-title">Contributors</div>
+            <div class="section-description">Add project contributors</div>
           </div>
-        </div>
+         </div>
+      </div>
+      <div class="button-container">
+        <button id="generate">Generate thumbnail</button>
       </div>
     </div>
 
-    <!-- Heading Section -->
-    <div class="control-group">
-      <div class="section-header">
-        <div class="header-left">
-          <label>Heading</label>
-        </div>
-        <button class="toggle-button" id="toggleHeading" title="Toggle Heading">
-          <i class="ph-bold ph-eye-slash"></i>
-          <span class="toggle-text">Show</span>
-        </button>
-      </div>
-      <div class="heading-section" id="headingSection">
-        <textarea id="heading" placeholder="Enter heading text"></textarea>
-        <div class="row">
-          <div class="position-input-group">
-            <label>Position</label>
-            <select id="headingPosition">
-              <option value="top">Top</option>
-              <option value="middle">Middle</option>
-              <option value="bottom" selected>Bottom</option>
-            </select>
-          </div>
-          <select id="headingFont">
-            <option value="Inter">Inter</option>
-            <option value="Helvetica Neue">Helvetica Neue</option>
-            <option value="Arial">Arial</option>
-          </select>
-          <select id="headingWeight">
-            <option value="Regular">Regular</option>
-            <option value="Medium">Medium</option>
-            <option value="Semi Bold">Semi Bold</option>
-            <option value="Bold">Bold</option>
-          </select>
-          <input type="number" id="headingSize" value="60" min="24" max="120" />
-          <input type="color" id="headingColor" value="#000000" />
-        </div>
-      </div>
-    </div>
+    <!-- Preview panel -->
+    <div class="preview-panel">
+      <!-- Preview section -->
 
-    <!-- Description Section -->
-    <div class="control-group">
-      <div class="section-header">
-        <div class="header-left">
-          <label>Description</label>
 
-        </div>
-        <button class="toggle-button" id="toggleDescription" title="Toggle Description">
-          <i class="ph-bold ph-eye-slash"></i>
-          <span class="toggle-text">Show</span>
-        </button>
-      </div>
-      <div class="description-section" id="descriptionSection">
-        <textarea
-          id="description"
-          placeholder="Enter description text"
-        ></textarea>
-        <div class="row">
-          <div class="position-input-group">
-            <label>Position</label>
-            <select id="descriptionPosition">
-              <option value="below-heading" selected>Below Heading</option>
-              <option value="above-heading">Above Heading</option>
-            </select>
-          </div>
-          <select id="descriptionFont">
-            <option value="Inter">Inter</option>
-            <option value="Helvetica Neue">Helvetica Neue</option>
-            <option value="Arial">Arial</option>
-          </select>
-          <select id="descriptionWeight">
-            <option value="Regular">Regular</option>
-            <option value="Medium">Medium</option>
-            <option value="Semi Bold">Semi Bold</option>
-            <option value="Bold">Bold</option>
-          </select>
-          <input
-            type="number"
-            id="descriptionSize"
-            value="32"
-            min="16"
-            max="64"
-          />
-          <input type="color" id="descriptionColor" value="#000000" />
-        </div>
-      </div>
-    </div>
+         <div class="preview-header">
+           Preview
+         </div>
+         <div class="preview-content">
+           <div class="preview-placeholder">
+             Select an element to preview
+           </div>
+         </div>
 
-    <!-- Add this after the description section -->
-    <div class="control-group">
-      <div class="section-header">
-        <div class="header-left">
-          <label>Tags</label>
-        </div>
-        <button class="toggle-button" id="toggleTags" title="Toggle Tags">
-          <i class="ph-bold ph-eye-slash"></i>
-          <span class="toggle-text">Show</span>
-        </button>
-      </div>
-      <div class="tags-section" id="tagsSection">
-        <div id="tagsList">
-          <!-- Tag items will be added here dynamically -->
-        </div>
-        <button class="add-tag-button" id="addTagButton">
-          <i class="ph-bold ph-plus"></i>
-          Add Tag
-        </button>
-      </div>
-    </div>
+      
+      <!-- Properties section -->
 
-    <!-- Add this after the tags section -->
-    <div class="control-group">
-      <div class="section-header">
-        <div class="header-left">
-          <label>Contributors</label>
-        </div>
-        <button class="toggle-button" id="toggleContributors" title="Toggle Contributors">
-          <i class="ph-bold ph-eye-slash"></i>
-          <span class="toggle-text">Show</span>
-        </button>
-      </div>
-      <div class="contributors-section" id="contributorsSection">
-        <div id="contributorsList">
-          <!-- Contributors will be added here dynamically -->
-        </div>
-        <div class="display-options">
-          <label>Display Mode</label>
-          <select id="contributorsDisplayMode" class="display-mode-select">
-            <option value="avatars-only">Avatars Only</option>
-            <option value="names-only">Names Only</option>
-            <option value="both">Avatars & Names</option>
-          </select>
-        </div>
-        <button class="add-contributor-button" id="addContributorButton">
-          <i class="ph-bold ph-plus"></i>
-          Add Contributor
-        </button>
-      </div>
-    </div>
+         <div class="properties-panel">
+           <div class="properties-header">
+             Select an element to edit properties
+           </div>
+           <div class="properties-content">
+             <!-- Background properties -->
+             <div id="backgroundProperties" class="property-group" style="display: none;">
+               <div class="property-input">
+                 <label>Background Color</label>
+                 <div class="color-picker-input">
+                   <input type="color" id="backgroundColor" value="#FFFFFF">
+                   <div class="color-preview" style="background-color: #FFFFFF"></div>
+                 </div>
+               </div>
+               <div class="property-input">
+                 <label>
+                   <input type="checkbox" id="gradientToggle">
+                   Add gradient overlay
+                 </label>
+               </div>
+             </div>
 
-    <!-- Move the AI button and section before the button container -->
-    <button id="askAI" class="ask-ai-button">
-      <i class="ph-bold ph-magic-wand"></i>
-      Ask AI to Create
-    </button>
+             <!-- Heading properties -->
+             <div id="headingProperties" class="property-group" style="display: none;">
+               <div class="property-input">
+                 <label>Heading Text</label>
+                 <input type="text" id="headingText" placeholder="Enter heading">
+               </div>
+               <div class="property-input">
+                 <label>Font Size</label>
+                 <input type="number" id="headingSize" value="32" min="12" max="96">
+               </div>
+               <div class="property-input">
+                 <label>Color</label>
+                 <input type="color" id="headingColor" value="#000000">
+               </div>
+             </div>
 
-    <div id="aiSection" class="ai-section hidden">
-      <textarea 
-        id="aiPrompt" 
-        placeholder="Describe your thumbnail (e.g., 'Create a thumbnail for a blog post about modern web development trends')"
-        class="ai-prompt"
-      ></textarea>
-      <div class="ai-options">
-        <label class="checkbox-label">
-          <input type="checkbox" id="includeBackground" checked>
-          Generate background image
-        </label>
-      </div>
-      <button id="generateAI" class="ai-generate-button">
-        <i class="ph-bold ph-magic-wand"></i>
-        Generate with AI
-      </button>
-      <div id="aiStatus" class="ai-status"></div>
-    </div>
+             <!-- Description properties -->
+             <div id="descriptionProperties" class="property-group" style="display: none;">
+               <div class="property-input">
+                 <label>Description Text</label>
+                 <textarea id="descriptionText" placeholder="Enter description"></textarea>
+               </div>
+               <div class="property-input">
+                 <label>Font Size</label>
+                 <input type="number" id="descriptionSize" value="16" min="10" max="48">
+               </div>
+               <div class="property-input">
+                 <label>Color</label>
+                 <input type="color" id="descriptionColor" value="#666666">
+               </div>
+             </div>
+           </div>
+         </div>
 
-    <!-- Keep the generate button at the very bottom -->
-    <div class="button-container">
-      <button id="generate">Generate Thumbnail</button>
     </div>
 
     <script>
-      // Initialize state variables
-      let isBackgroundActive = false;
-      let isHeadingActive = false;
-      let isDescriptionActive = false;
-      let isTagsActive = false;
-      let isContributorsActive = false;
-      let tagCounter = 0;
-      let contributorCounter = 0;
+      // Get all sections and property groups
+      const sections = document.querySelectorAll('.section');
+      const propertyGroups = document.querySelectorAll('.property-group');
+      const propertiesHeader = document.querySelector('.properties-header');
+      const previewContent = document.querySelector('.preview-content');
+      const previewPlaceholder = document.querySelector('.preview-placeholder');
+      const generateButton = document.getElementById('generate');
 
-      // Get DOM elements
-      const toggleBackground = document.getElementById("toggleBackground");
-      const toggleHeading = document.getElementById("toggleHeading");
-      const toggleDescription = document.getElementById("toggleDescription");
-      const toggleTags = document.getElementById('toggleTags');
-      const toggleContributors = document.getElementById('toggleContributors');
+      // State object to store current values
+      const state = {
+        activeSection: null,
+        background: {
+          color: '#FFFFFF',
+          gradient: false
+        },
+        heading: {
+          text: '',
+          size: 32,
+          color: '#000000'
+        },
+        description: {
+          text: '',
+          size: 16,
+          color: '#666666'
+        }
+      };
 
-      const backgroundSection = document.getElementById("backgroundSection");
-      const headingSection = document.getElementById("headingSection");
-      const descriptionSection = document.getElementById("descriptionSection");
-      const tagsSection = document.getElementById('tagsSection');
-      const tagsList = document.getElementById('tagsList');
-      const addTagButton = document.getElementById('addTagButton');
-      const contributorsSection = document.getElementById('contributorsSection');
-      const contributorsList = document.getElementById('contributorsList');
-      const addContributorButton = document.getElementById('addContributorButton');
-      const contributorsDisplayMode = document.getElementById('contributorsDisplayMode');
+      // Handle section selection
+      sections.forEach(section => {
+        section.addEventListener('click', () => {
+          // Remove active class from all sections
+          sections.forEach(s => s.classList.remove('active'));
+          
+          // Add active class to clicked section
+          section.classList.add('active');
+          state.activeSection = section.id;
+          
+          // Hide all property groups
+          propertyGroups.forEach(group => group.style.display = 'none');
+          
+          // Get section name from the section-title
+          const sectionName = section.querySelector('.section-title').textContent;
+          
+          // Update properties header
+          propertiesHeader.textContent = `${sectionName} Properties`;
+          
+          // Show corresponding property group
+          const propertyId = section.id.replace('Section', 'Properties');
+          const propertyGroup = document.getElementById(propertyId);
+          if (propertyGroup) {
+            propertyGroup.style.display = 'block';
+          }
 
-      // Scale factor for preview (280/1920 ≈ 0.14583333333333334)
-      const SCALE_FACTOR = 0.14583333333333334;
+          // Hide placeholder when a section is selected
+          previewPlaceholder.style.display = 'none';
+          
+          // Update preview
+          updatePreview();
+        });
+      });
 
-      // Function to handle section toggle
-      function toggleSection(button, section) {
-        const isActive = !section.classList.contains("active");
-        section.classList.toggle("active");
-        button.classList.toggle("active");
+      // Handle property changes
+      document.addEventListener('change', handlePropertyChange);
+      document.addEventListener('input', handlePropertyChange);
 
-        const icon = button.querySelector("i");
-        const text = button.querySelector(".toggle-text");
-
-        if (isActive) {
-          icon.className = "ph-bold ph-eye";
-          text.textContent = "Hide";
-        } else {
-          icon.className = "ph-bold ph-eye-slash";
-          text.textContent = "Show";
+      function handlePropertyChange(event) {
+        const target = event.target;
+        
+        // Update state based on input changes
+        switch(target.id) {
+          case 'backgroundColor':
+            state.background.color = target.value;
+            break;
+          case 'gradientToggle':
+            state.background.gradient = target.checked;
+            break;
+          case 'headingText':
+            state.heading.text = target.value;
+            break;
+          case 'headingSize':
+            state.heading.size = parseInt(target.value) || 32;
+            break;
+          case 'headingColor':
+            state.heading.color = target.value;
+            break;
+          case 'descriptionText':
+            state.description.text = target.value;
+            break;
+          case 'descriptionSize':
+            state.description.size = parseInt(target.value) || 16;
+            break;
+          case 'descriptionColor':
+            state.description.color = target.value;
+            break;
         }
 
-        return isActive;
+        // Handle color picker preview
+        if (target.type === 'color') {
+          const preview = target.parentElement.querySelector('.color-preview');
+          if (preview) {
+            preview.style.backgroundColor = target.value;
+          }
+        }
+        
+        // Update preview
+        requestAnimationFrame(updatePreview);
       }
 
-      // Add click event listeners for all toggle buttons
-      toggleBackground.addEventListener("click", () => {
-        isBackgroundActive = toggleSection(toggleBackground, backgroundSection);
-        updatePreview();
-      });
-
-      toggleHeading.addEventListener("click", () => {
-        isHeadingActive = toggleSection(toggleHeading, headingSection);
-        updatePreview();
-      });
-
-      toggleDescription.addEventListener("click", () => {
-        isDescriptionActive = toggleSection(toggleDescription, descriptionSection);
-        updatePreview();
-      });
-
-      toggleTags.addEventListener('click', () => {
-        isTagsActive = toggleSection(toggleTags, tagsSection);
-        updatePreview();
-      });
-
-      toggleContributors.addEventListener('click', () => {
-        isContributorsActive = toggleSection(toggleContributors, contributorsSection);
-        updatePreview();
-      });
-
-      // Function to update preview
       function updatePreview() {
-        const heading = document.getElementById("heading").value;
-        const previewHeading = document.querySelector(".preview-heading");
-        const previewDescription = document.querySelector(".preview-description");
-        const previewCanvas = document.querySelector(".preview-canvas");
-
-        // Update heading preview
-        if (isHeadingActive) {
-          previewHeading.style.display = "block";
-          previewHeading.textContent = heading;
-          previewHeading.style.fontSize = 
-            parseInt(document.getElementById("headingSize").value) * SCALE_FACTOR + "px";
-          previewHeading.style.fontFamily = document.getElementById("headingFont").value;
-          previewHeading.style.fontWeight = 
-            document.getElementById("headingWeight").value === "Bold" ? "700" : "400";
-          previewHeading.style.color = document.getElementById("headingColor").value;
-        } else {
-          previewHeading.style.display = "none";
-        }
-
-        // Update description preview
-        const description = document.getElementById("description").value;
-        if (isDescriptionActive && description) {
-          previewDescription.style.display = "block";
-          previewDescription.textContent = description;
-          previewDescription.style.fontSize = 
-            parseInt(document.getElementById("descriptionSize").value) * SCALE_FACTOR + "px";
-          previewDescription.style.fontFamily = document.getElementById("descriptionFont").value;
-          previewDescription.style.fontWeight = 
-            document.getElementById("descriptionWeight").value === "Bold" ? "700" : "400";
-          previewDescription.style.color = document.getElementById("descriptionColor").value;
-        } else {
-          previewDescription.style.display = "none";
-        }
-
         // Update background
-        if (isBackgroundActive) {
-          previewCanvas.style.backgroundColor = document.getElementById("backgroundColor").value;
-          previewCanvas.classList.toggle(
-            "with-gradient",
-            document.getElementById("gradientOverlay").checked
-          );
+        if (state.background.gradient) {
+          previewContent.style.background = `linear-gradient(180deg, ${state.background.color} 0%, rgba(0, 0, 0, 0.7) 100%)`;
         } else {
-          previewCanvas.style.backgroundColor = "#ffffff";
-          previewCanvas.classList.remove("with-gradient");
+          previewContent.style.background = state.background.color;
+        }
+
+        // Clear existing preview content except placeholder
+        const elements = previewContent.querySelectorAll(':not(.preview-placeholder)');
+        elements.forEach(el => el.remove());
+
+        // Create preview elements container
+        const previewElements = document.createElement('div');
+        previewElements.className = 'preview-elements';
+
+        // Add heading if exists
+        if (state.heading.text) {
+          const heading = document.createElement('div');
+          heading.className = 'preview-heading';
+          heading.textContent = state.heading.text;
+          heading.style.fontSize = `${state.heading.size}px`;
+          heading.style.color = state.heading.color;
+          heading.style.fontWeight = '600';
+          previewElements.appendChild(heading);
+        }
+
+        // Add description if exists
+        if (state.description.text) {
+          const description = document.createElement('div');
+          description.className = 'preview-description';
+          description.textContent = state.description.text;
+          description.style.fontSize = `${state.description.size}px`;
+          description.style.color = state.description.color;
+          previewElements.appendChild(description);
+        }
+
+        // Add elements to preview if there's content
+        if (state.heading.text || state.description.text) {
+          previewContent.appendChild(previewElements);
+          previewPlaceholder.style.display = 'none';
+        } else {
+          previewPlaceholder.style.display = 'block';
         }
       }
 
-      // Show heading section by default
-      isHeadingActive = toggleSection(toggleHeading, headingSection);
-      updatePreview();
-
-      // Add event listeners for all inputs
-      document.querySelectorAll('input, select, textarea').forEach(input => {
-        input.addEventListener('input', updatePreview);
-        input.addEventListener('change', updatePreview);
-      });
-
-      const generateButton = document.getElementById("generate");
-      generateButton.onclick = () => {
-        const heading = document.getElementById("heading").value;
-        if (!heading) {
-          alert("Heading is required!");
-          return;
-        }
-
-        const description = isDescriptionActive
-          ? document.getElementById("description").value
-          : "";
-
-        // Get heading styles
-        const headingFont = document.getElementById("headingFont").value;
-        const headingWeight = document.getElementById("headingWeight").value;
-        const headingSize = parseInt(
-          document.getElementById("headingSize").value
-        );
-        const headingColor = document.getElementById("headingColor").value;
-
-        // Get description styles only if active
-        const descriptionStyles = isDescriptionActive
-          ? {
-              font: document.getElementById("descriptionFont").value,
-              weight: document.getElementById("descriptionWeight").value,
-              size: parseInt(document.getElementById("descriptionSize").value),
-              color: document.getElementById("descriptionColor").value,
-            }
-          : null;
-
-        // Add background styles
-        const backgroundStyles = {
-          color: document.getElementById("backgroundColor").value,
-          gradient: document.getElementById("gradientOverlay").checked,
-        };
-
-        // Get position information
-        const headingPosition =
-          document.getElementById("headingPosition").value;
-        const descriptionPosition = document.getElementById(
-          "descriptionPosition"
-        ).value;
-
-        // Get tags if active
-        const tags = isTagsActive ? Array.from(document.querySelectorAll('.tag-item')).map(tag => ({
-          text: tag.querySelector('.tag-text').value,
-          position: tag.querySelector('.tag-position').value,
-          fillColor: tag.querySelector('.tag-fill-color').value,
-          textColor: tag.querySelector('.tag-text-color').value,
-          radius: parseInt(tag.querySelector('.tag-radius').value),
-          fontSize: parseInt(tag.querySelector('.tag-font-size').value),
-          fontWeight: tag.querySelector('.tag-font-weight').value
-        })) : [];
-
-        // Get contributors if active
-        const contributors = isContributorsActive ? Array.from(document.querySelectorAll('.contributor-item')).map(contributor => ({
-          name: contributor.querySelector('.contributor-name').value,
-          avatarUrl: contributor.querySelector('.contributor-avatar').src,
-        })) : [];
-
-        // Send message to plugin code
-        parent.postMessage(
-          {
-            pluginMessage: {
-              type: "generate-thumbnail",
-              heading,
-              description,
-              styles: {
-                heading: {
-                  font: headingFont,
-                  weight: headingWeight,
-                  size: headingSize,
-                  color: headingColor,
-                  position: headingPosition,
-                },
-                description: descriptionStyles
-                  ? {
-                      ...descriptionStyles,
-                      position: descriptionPosition,
-                    }
-                  : null,
-                background: backgroundStyles,
-                tags: tags.length > 0 ? tags : null,
-                contributors: {
-                  items: contributors,
-                  displayMode: contributorsDisplayMode.value
-                }
+      // Handle generate button click
+      generateButton.addEventListener('click', () => {
+        parent.postMessage({ 
+          pluginMessage: {
+            type: 'generate-thumbnail',
+            heading: state.heading.text,
+            description: state.description.text,
+            styles: {
+              background: state.background,
+              heading: {
+                size: state.heading.size,
+                color: state.heading.color,
+                font: 'Inter',
+                weight: 'Bold',
+                position: 'center'
               },
-            },
-          },
-          "*"
-        );
-      };
-
-      // Function to create a new tag item
-      function createTagItem() {
-        const tagItem = document.createElement('div');
-        tagItem.className = 'tag-item';
-        tagItem.innerHTML = `
-          <div class="tag-header">
-            <span class="tag-title">Tag ${++tagCounter}</span>
-            <button class="remove-tag" title="Remove Tag">
-              <i class="ph-bold ph-x"></i>
-            </button>
-          </div>
-          <input type="text" class="tag-text" placeholder="Enter tag text">
-          <div class="row">
-            <select class="tag-position">
-              <option value="top">Top</option>
-              <option value="above-heading">Above Heading</option>
-              <option value="bottom">Bottom</option>
-            </select>
-          </div>
-          <div class="tag-styles">
-            <div class="row">
-              <div class="color-group">
-                <label>Fill Color</label>
-                <input type="color" class="tag-fill-color" value="#E8F0FE">
-              </div>
-              <div class="color-group">
-                <label>Text Color</label>
-                <input type="color" class="tag-text-color" value="#1967D2">
-              </div>
-            </div>
-            <div class="row">
-              <div class="input-group">
-                <label>Corner Radius</label>
-                <input type="number" class="tag-radius" value="20" min="0" max="100">
-              </div>
-              <div class="input-group">
-                <label>Font Size</label>
-                <input type="number" class="tag-font-size" value="20" min="8" max="72">
-              </div>
-            </div>
-            <div class="row">
-              <div class="input-group">
-                <label>Font Weight</label>
-                <select class="tag-font-weight">
-                  <option value="Regular">Regular</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Bold">Bold</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        `;
-
-        // Add styles for the new controls
-        const styles = document.createElement('style');
-        styles.textContent = `
-          .tag-styles {
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid #eee;
-          }
-          .color-group, .input-group {
-            flex: 1;
-          }
-          .color-group label, .input-group label {
-            display: block;
-            font-size: 11px;
-            margin-bottom: 4px;
-            color: #666;
-          }
-          .tag-styles input[type="number"] {
-            width: 100%;
-          }
-        `;
-        document.head.appendChild(styles);
-
-        // Add remove tag handler
-        tagItem.querySelector('.remove-tag').onclick = () => {
-          tagItem.remove();
-          updatePreview();
-        };
-
-        // Add change listeners for tag inputs
-        tagItem.querySelectorAll('input, select').forEach(input => {
-          input.addEventListener('change', updatePreview);
-          input.addEventListener('input', updatePreview);
-        });
-
-        return tagItem;
-      }
-
-      // Add tag button handler
-      addTagButton.onclick = () => {
-        tagsList.appendChild(createTagItem());
-        updatePreview();
-      };
-
-      // Function to create a new contributor item
-      function createContributorItem() {
-        const contributorItem = document.createElement('div');
-        contributorItem.className = 'contributor-item';
-        
-        // Generate a random seed for the avatar
-        const seed = Math.random().toString(36).substring(7);
-        const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
-        
-        contributorItem.innerHTML = `
-          <div class="contributor-header">
-            <div class="contributor-preview">
-              <img src="${avatarUrl}" class="contributor-avatar" alt="Avatar">
-              <span class="contributor-title">Contributor ${++contributorCounter}</span>
-            </div>
-            <button class="remove-contributor" title="Remove Contributor">
-              <i class="ph-bold ph-x"></i>
-            </button>
-          </div>
-          <input type="text" class="contributor-name" placeholder="Enter contributor name">
-        `;
-
-        // Add remove handler
-        contributorItem.querySelector('.remove-contributor').onclick = () => {
-          contributorItem.remove();
-          updatePreview();
-        };
-
-        // Add change listeners
-        contributorItem.querySelectorAll('input, select').forEach(input => {
-          input.addEventListener('change', updatePreview);
-          input.addEventListener('input', updatePreview);
-        });
-
-        return contributorItem;
-      }
-
-      // Add contributor button handler
-      addContributorButton.onclick = () => {
-        contributorsList.appendChild(createContributorItem());
-        updatePreview();
-      };
-
-      // AI section handlers
-      const aiSection = document.getElementById('aiSection');
-      const askAIButton = document.getElementById('askAI');
-      const aiPromptInput = document.getElementById('aiPrompt');
-      const generateAIButton = document.getElementById('generateAI');
-      const includeBackgroundCheck = document.getElementById('includeBackground');
-      const aiStatus = document.getElementById('aiStatus');
-
-      // Toggle AI section
-      askAIButton.onclick = () => {
-        aiSection.classList.toggle('hidden');
-        if (!aiSection.classList.contains('hidden')) {
-          aiPromptInput.focus();
-        }
-      };
-
-      // Generate with AI
-      generateAIButton.onclick = async () => {
-        const prompt = aiPromptInput.value.trim();
-        if (!prompt) {
-          aiStatus.textContent = 'Please enter a prompt';
-          aiStatus.className = 'ai-status error';
-          return;
-        }
-
-        try {
-          aiStatus.innerHTML = '<i class="ph-bold ph-circle-notch ph-spin"></i> Generating thumbnail...';
-          aiStatus.className = 'ai-status loading';
-          generateAIButton.disabled = true;
-
-          parent.postMessage({ 
-            pluginMessage: { 
-              type: 'generate-ai-thumbnail',
-              prompt,
-              includeBackground: includeBackgroundCheck.checked
+              description: {
+                size: state.description.size,
+                color: state.description.color,
+                font: 'Inter',
+                weight: 'Regular',
+                position: 'center'
+              }
             }
-          }, '*');
-        } catch (error) {
-          aiStatus.textContent = 'Error generating thumbnail: ' + error.message;
-          aiStatus.className = 'ai-status error';
-          generateAIButton.disabled = false;
-        }
-      };
-
-      // Update the message handler
-      window.onmessage = async (event) => {
-        if (event.data.pluginMessage.type === 'ai-generation-complete') {
-          aiStatus.textContent = 'Thumbnail generated successfully!';
-          aiStatus.className = 'ai-status success';
-          generateAIButton.disabled = false;
-          
-          // Update the form with generated content
-          document.getElementById('heading').value = event.data.pluginMessage.heading;
-          document.getElementById('description').value = event.data.pluginMessage.description;
-          if (event.data.pluginMessage.backgroundColor) {
-            document.getElementById('backgroundColor').value = event.data.pluginMessage.backgroundColor;
           }
-          
-          // Hide AI section after a short delay
-          setTimeout(() => {
-            aiSection.classList.add('hidden');
-            aiPromptInput.value = '';
-            aiStatus.textContent = '';
-            aiStatus.className = 'ai-status';
-          }, 1500);
-          
-          // Trigger preview update
-          updatePreview();
-        } else if (event.data.pluginMessage.type === 'ai-generation-error') {
-          aiStatus.textContent = 'Error: ' + event.data.pluginMessage.error;
-          aiStatus.className = 'ai-status error';
-          generateAIButton.disabled = false;
-        }
-      };
+        }, '*');
+      });
     </script>
   </body>
 </html>
+
+
+
+
