@@ -5,6 +5,56 @@
     <title>Thumbnail Generator</title>
     <!-- Add Phosphor Icons -->
     <!-- <script src="https://unpkg.com/@phosphor-icons/web"></script> -->
+    <script>
+      onmessage = (event) => {
+        if (event.source === window.parent.parent.parent && event.origin === "https://www.figma.com") {
+          // Handle keyboard shortcuts and theme
+          document.addEventListener('keydown', (e) => {
+            // ... keyboard event handling code ...
+          }, true);
+
+          // Theme handling
+          window.addEventListener('message', function(event) {
+            if (
+              event.source === window.parent.parent.parent &&
+              event.data &&
+              typeof event.data === 'object' &&
+              'figmaMessage' in event.data
+            ) {
+              // ... theme handling code ...
+            }
+          }, true);
+
+          // Add dark theme by default
+          window.addEventListener('load', (event) => {
+            document.documentElement.classList.add('figma-dark');
+          });
+
+          // Security policy violation handling
+          window.addEventListener('securitypolicyviolation', (event) => {
+            try {
+              const url = new URL(event.blockedURI);
+              console.warn(
+                'Failed to load resource from',
+                event.blockedURI,
+                'since it is not in the list of allowed domains. Please add',
+                '"' + url.origin + '"',
+                'to the networkAccess > allowedDomains field in your manifest.json.'
+              );
+            } catch {
+              // Handle invalid URLs
+            }
+          });
+        }
+      };
+    </script>
+    <style id="figma-style">
+      :root {
+        /* CSS variables for Figma theme */
+        --figma-color-bg: #2c2c2c;
+        /* ... other CSS variables ... */
+      }
+    </style>
     <style>
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -91,7 +141,38 @@
         align-items: flex-start;
         justify-content: space-between;
         margin: 0;
-        
+        position: relative;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-origin: center;
+      }
+
+      /* Add press animation */
+      .section:active {
+        transform: scale(0.98);
+        background: #F7F9FC;
+      }
+
+      .section.active {
+        background: linear-gradient(180deg, #FFFDFE 0%, #FFECF3 100%);
+        border: 1px solid rgba(255, 132, 175, 0.20);
+        animation: selectSection 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @keyframes selectSection {
+        0% {
+          transform: scale(0.98);
+        }
+        50% {
+          transform: scale(1.02);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .section.active .section-title {
+        color: #2B303B;
+        font-weight: 500;
       }
 
       .section:hover {
@@ -378,12 +459,11 @@
       }
 
       .tag-item {
-        background: #f5f5f5;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 8px;
+        background: #FFFFFF;
+        border: 1px solid #E1E4EA;
+        border-radius: 6px;
+        padding: 12px;
         margin-bottom: 8px;
-        display: block; /* Make sure it's visible */
       }
 
       .tag-header {
@@ -396,32 +476,63 @@
       .tag-title {
         font-size: 12px;
         font-weight: 500;
-        color: #333;
-        display: block;
+        color: #2B303B;
       }
 
       .remove-tag {
         background: none;
         border: none;
-        color: #666;
         padding: 4px;
         cursor: pointer;
-        width: auto;
-        display: flex;
-        align-items: center;
-      }
-
-      .remove-tag:hover {
-        color: #ff4444;
-        background: none;
-      }
-
-      .add-tag-button {
+        color: #99A0AE;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 4px;
-        margin-top: 8px;
+      }
+
+      .remove-tag:hover {
+        color: #FF4D4D;
+      }
+
+      .tag-preview {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+
+      #tagPropertiesForm {
+        background: #F7F9FC;
+        border: 1px solid #E1E4EA;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 12px;
+      }
+
+      .add-tag-form-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .add-tag-form-buttons button {
+        flex: 1;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .add-tag-form-buttons .cancel {
+        background: #FFFFFF;
+        border: 1px solid #E1E4EA;
+        color: #2B303B;
+      }
+
+      .add-tag-form-buttons .add {
+        background: #2B303B;
+        border: 1px solid #2B303B;
+        color: #FFFFFF;
       }
 
       .contributors-section {
@@ -433,10 +544,10 @@
       }
 
       .contributor-item {
-        background: #f5f5f5;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 8px;
+        background: #FFFFFF;
+        border: 1px solid #E1E4EA;
+        border-radius: 6px;
+        padding: 12px;
         margin-bottom: 8px;
       }
 
@@ -457,7 +568,9 @@
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background: #ddd;
+        background: #F5F5F5;
+        background-size: cover;
+        background-position: center;
       }
 
       .display-options {
@@ -595,6 +708,92 @@
         padding: 120px 160px; /* Match SAFE_SPACE from TypeScript */
         box-sizing: border-box;
       }
+
+      /* Add styles for the add tag button in the header */
+      .properties-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .add-tag-header-button {
+        font-size: 12px;
+        padding: 4px 8px;
+        background: #F5F5F5;
+        border: 1px solid #E1E4EA;
+        border-radius: 4px;
+        color: #2B303B;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s ease;
+      }
+
+      .add-tag-header-button:hover {
+        background: #EAEAEA;
+        border-color: #D1D5DB;
+      }
+
+      /* Contributor styles */
+      .contributor-item {
+        background: #FFFFFF;
+        border: 1px solid #E1E4EA;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 8px;
+      }
+
+      .contributor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .contributor-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: #2B303B;
+      }
+
+      .remove-contributor {
+        background: none;
+        border: none;
+        padding: 4px;
+        cursor: pointer;
+        color: #99A0AE;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .remove-contributor:hover {
+        color: #FF4D4D;
+      }
+
+      .contributor-preview {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .contributor-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #F5F5F5;
+        background-size: cover;
+        background-position: center;
+      }
+
+      #contributorPropertiesForm {
+        background: #F7F9FC;
+        border: 1px solid #E1E4EA;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 12px;
+      }
     </style>
   </head>
   <body>
@@ -640,13 +839,13 @@
          </div>
 
          <div class="two-column-sections">
-          <div class="section" id="tagsSection">
+          <div id="tagsSection" class="section">
             <svg class="section-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2.64625 8.64625C2.55266 8.55255 2.50006 8.42556 2.5 8.29313V2.5H8.29313C8.42556 2.50006 8.55255 2.55266 8.64625 2.64625L14.8538 8.85375C14.9474 8.94751 15.0001 9.07464 15.0001 9.20719C15.0001 9.33974 14.9474 9.46687 14.8538 9.56063L9.5625 14.8538C9.46874 14.9474 9.34161 15.0001 9.20906 15.0001C9.07651 15.0001 8.94938 14.9474 8.85563 14.8538L2.64625 8.64625Z" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M5.5 5.25C5.5 5.38807 5.38807 5.5 5.25 5.5C5.11193 5.5 5 5.38807 5 5.25C5 5.11193 5.11193 5 5.25 5C5.38807 5 5.5 5.11193 5.5 5.25Z" fill="#343330" stroke="#222530"/>
-              </svg>
+              <path d="M13.5 8.5L8.5 13.5C8.36739 13.6326 8.19021 13.7066 8.00552 13.7066C7.82084 13.7066 7.64366 13.6326 7.51104 13.5L2.5 8.5V2.5H8.5L13.5 7.5V8.5Z" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5 5H5.01" stroke="#222530" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
             <div class="section-title">Tags</div>
-            <div class="section-description">Add a project tags</div>
+            <div class="section-description">Add project tags</div>
           </div>
 
           <div class="section" id="contributorsSection">
@@ -735,6 +934,69 @@
                  <input type="color" id="descriptionColor" value="#666666">
                </div>
              </div>
+
+             <!-- Tags properties -->
+             <div id="tagsProperties" class="property-group" style="display: none;">
+               <div id="tagsList">
+                 <!-- Tags will be listed here -->
+               </div>
+               <div id="tagPropertiesForm" style="display: none;">
+                 <div class="property-input">
+                   <label>Tag Text</label>
+                   <input type="text" id="tagText" placeholder="Enter tag text">
+                 </div>
+                 <div class="property-input">
+                   <label>Fill Color</label>
+                   <input type="color" id="tagFillColor" value="#E1E4EA">
+                 </div>
+                 <div class="property-input">
+                   <label>Text Color</label>
+                   <input type="color" id="tagTextColor" value="#2B303B">
+                 </div>
+                 <div class="add-tag-form-buttons">
+                   <button class="cancel" onclick="document.getElementById('tagPropertiesForm').style.display='none'">Cancel</button>
+                   <button class="add" onclick="addNewTag(
+                     document.getElementById('tagText').value,
+                     document.getElementById('tagFillColor').value,
+                     document.getElementById('tagTextColor').value
+                   )">Add Tag</button>
+                 </div>
+               </div>
+             </div>
+
+             <!-- Contributors properties -->
+             <div id="contributorsProperties" class="property-group" style="display: none;">
+               <div class="property-input">
+                 <label>Display Mode</label>
+                 <select id="contributorsDisplayMode" onchange="state.contributors.displayMode = this.value; updatePreview();">
+                   <option value="both">Show avatars and names</option>
+                   <option value="avatars-only">Show avatars only</option>
+                   <option value="names-only">Show names only</option>
+                 </select>
+               </div>
+               
+               <div id="contributorsList">
+                 <!-- Contributors will be listed here -->
+               </div>
+               
+               <div id="contributorPropertiesForm" style="display: none;">
+                 <div class="property-input">
+                   <label>Name</label>
+                   <input type="text" id="contributorName" placeholder="Enter contributor name">
+                 </div>
+                 <div class="property-input">
+                   <label>Avatar URL</label>
+                   <input type="text" id="contributorAvatarUrl" placeholder="Enter avatar URL">
+                 </div>
+                 <div class="add-tag-form-buttons">
+                   <button class="cancel" onclick="document.getElementById('contributorPropertiesForm').style.display='none'">Cancel</button>
+                   <button class="add" onclick="addNewContributor(
+                     document.getElementById('contributorName').value,
+                     document.getElementById('contributorAvatarUrl').value
+                   )">Add Contributor</button>
+                 </div>
+               </div>
+             </div>
            </div>
          </div>
 
@@ -751,7 +1013,6 @@
 
       // State object to store current values
       const state = {
-        activeSection: null,
         background: {
           color: '#FFFFFF',
           gradient: false
@@ -765,10 +1026,66 @@
           text: '',
           size: 16,
           color: '#666666'
+        },
+        tags: [],
+        contributors: {
+          items: [],
+          displayMode: 'both' // 'avatars-only' | 'names-only' | 'both'
         }
       };
 
-      // Handle section selection
+      // Get all input elements
+      const backgroundColorInput = document.getElementById('backgroundColor');
+      const gradientToggle = document.getElementById('gradientToggle');
+      const headingTextInput = document.getElementById('headingText');
+      const headingSizeInput = document.getElementById('headingSize');
+      const headingColorInput = document.getElementById('headingColor');
+      const descriptionTextInput = document.getElementById('descriptionText');
+      const descriptionSizeInput = document.getElementById('descriptionSize');
+      const descriptionColorInput = document.getElementById('descriptionColor');
+
+      // Add input event listeners
+      backgroundColorInput.addEventListener('input', (e) => {
+        state.background.color = e.target.value;
+        updatePreview();
+      });
+
+      gradientToggle.addEventListener('change', (e) => {
+        state.background.gradient = e.target.checked;
+        updatePreview();
+      });
+
+      headingTextInput.addEventListener('input', (e) => {
+        state.heading.text = e.target.value;
+        updatePreview();
+      });
+
+      headingSizeInput.addEventListener('input', (e) => {
+        state.heading.size = parseInt(e.target.value);
+        updatePreview();
+      });
+
+      headingColorInput.addEventListener('input', (e) => {
+        state.heading.color = e.target.value;
+        updatePreview();
+      });
+
+      descriptionTextInput.addEventListener('input', (e) => {
+        state.description.text = e.target.value;
+        updatePreview();
+      });
+
+      descriptionSizeInput.addEventListener('input', (e) => {
+        state.description.size = parseInt(e.target.value);
+        updatePreview();
+      });
+
+      descriptionColorInput.addEventListener('input', (e) => {
+        state.description.color = e.target.value;
+        updatePreview();
+      });
+
+      // Add click event listeners for sections
       sections.forEach(section => {
         section.addEventListener('click', () => {
           // Remove active class from all sections
@@ -776,78 +1093,186 @@
           
           // Add active class to clicked section
           section.classList.add('active');
-          state.activeSection = section.id;
           
-          // Hide all property groups
-          propertyGroups.forEach(group => group.style.display = 'none');
+          // Get the corresponding properties group ID
+          const propertiesId = section.id.replace('Section', 'Properties');
           
-          // Get section name from the section-title
-          const sectionName = section.querySelector('.section-title').textContent;
-          
-          // Update properties header
-          propertiesHeader.textContent = `${sectionName} Properties`;
-          
-          // Show corresponding property group
-          const propertyId = section.id.replace('Section', 'Properties');
-          const propertyGroup = document.getElementById(propertyId);
-          if (propertyGroup) {
-            propertyGroup.style.display = 'block';
-          }
-
-          // Hide placeholder when a section is selected
-          previewPlaceholder.style.display = 'none';
-          
-          // Update preview
-          updatePreview();
+          // Show the corresponding properties
+          showPropertyGroup(propertiesId);
         });
       });
 
-      // Handle property changes
-      document.addEventListener('change', handlePropertyChange);
-      document.addEventListener('input', handlePropertyChange);
-
-      function handlePropertyChange(event) {
-        const target = event.target;
+      function showPropertyGroup(groupId) {
+        // Hide all property groups first
+        propertyGroups.forEach(group => {
+          group.style.display = 'none';
+        });
         
-        // Update state based on input changes
-        switch(target.id) {
-          case 'backgroundColor':
-            state.background.color = target.value;
-            break;
-          case 'gradientToggle':
-            state.background.gradient = target.checked;
-            break;
-          case 'headingText':
-            state.heading.text = target.value;
-            break;
-          case 'headingSize':
-            state.heading.size = parseInt(target.value) || 32;
-            break;
-          case 'headingColor':
-            state.heading.color = target.value;
-            break;
-          case 'descriptionText':
-            state.description.text = target.value;
-            break;
-          case 'descriptionSize':
-            state.description.size = parseInt(target.value) || 16;
-            break;
-          case 'descriptionColor':
-            state.description.color = target.value;
-            break;
+        // Show the selected group
+        const selectedGroup = document.getElementById(groupId);
+        if (selectedGroup) {
+          selectedGroup.style.display = 'block';
         }
 
-        // Handle color picker preview
-        if (target.type === 'color') {
-          const preview = target.parentElement.querySelector('.color-preview');
-          if (preview) {
-            preview.style.backgroundColor = target.value;
-          }
+        // Update properties header text and button
+        propertiesHeader.innerHTML = '';  // Clear existing content
+        
+        // Add the title text
+        const titleText = document.createElement('span');
+        const activeSection = document.querySelector('.section.active');
+        titleText.textContent = activeSection.querySelector('.section-title').textContent + ' Properties';
+        propertiesHeader.appendChild(titleText);
+
+        // Add the "Add new tag" button if we're showing tag properties
+        if (groupId === 'tagsProperties') {
+          const addButton = document.createElement('button');
+          addButton.className = 'add-tag-header-button';
+          addButton.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 2.5V9.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2.5 6H9.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Add new tag</span>
+          `;
+          addButton.onclick = () => {
+            const tagPropertiesForm = document.getElementById('tagPropertiesForm');
+            if (tagPropertiesForm) {
+              tagPropertiesForm.style.display = 'block';
+            }
+          };
+          propertiesHeader.appendChild(addButton);
         }
+
+        // Add the "Add new contributor" button if we're showing contributor properties
+        if (groupId === 'contributorsProperties') {
+          const addButton = document.createElement('button');
+          addButton.className = 'add-tag-header-button';
+          addButton.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 2.5V9.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2.5 6H9.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Add new contributor</span>
+          `;
+          addButton.onclick = () => {
+            const contributorPropertiesForm = document.getElementById('contributorPropertiesForm');
+            if (contributorPropertiesForm) {
+              contributorPropertiesForm.style.display = 'block';
+            }
+          };
+          propertiesHeader.appendChild(addButton);
+        }
+      }
+
+      // Add function to handle adding new tags
+      function addNewTag(text, fillColor, textColor) {
+        const tag = {
+          text,
+          fillColor,
+          textColor
+        };
+        
+        state.tags.push(tag);
+        
+        // Update tags list
+        updateTagsList();
         
         // Update preview
-        requestAnimationFrame(updatePreview);
+        updatePreview();
       }
+
+      // Add function to update tags list
+      function updateTagsList() {
+        const tagsList = document.getElementById('tagsList');
+        tagsList.innerHTML = '';
+        
+        state.tags.forEach((tag, index) => {
+          const tagItem = document.createElement('div');
+          tagItem.className = 'tag-item';
+          tagItem.innerHTML = `
+            <div class="tag-header">
+              <span class="tag-title">${tag.text}</span>
+              <button class="remove-tag" onclick="removeTag(${index})">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 3L3 9" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M3 3L9 9" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="tag-preview" style="background-color: ${tag.fillColor}; color: ${tag.textColor}">
+              ${tag.text}
+            </div>
+          `;
+          tagsList.appendChild(tagItem);
+        });
+      }
+
+      // Add function to remove tags
+      function removeTag(index) {
+        state.tags.splice(index, 1);
+        updateTagsList();
+        updatePreview();
+      }
+
+      // Add function to handle adding new contributors
+      function addNewContributor(name, avatarUrl) {
+        const contributor = {
+          name,
+          avatarUrl
+        };
+        
+        state.contributors.items.push(contributor);
+        updateContributorsList();
+        updatePreview();
+      }
+
+      // Add function to update contributors list
+      function updateContributorsList() {
+        const contributorsList = document.getElementById('contributorsList');
+        contributorsList.innerHTML = '';
+        
+        state.contributors.items.forEach((contributor, index) => {
+          const contributorItem = document.createElement('div');
+          contributorItem.className = 'contributor-item';
+          contributorItem.innerHTML = `
+            <div class="contributor-header">
+              <span class="contributor-title">${contributor.name}</span>
+              <button class="remove-contributor" onclick="removeContributor(${index})">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 3L3 9" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M3 3L9 9" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="contributor-preview">
+              <div class="contributor-avatar" style="background-image: url(${contributor.avatarUrl})"></div>
+              <span>${contributor.name}</span>
+            </div>
+          `;
+          contributorsList.appendChild(contributorItem);
+        });
+      }
+
+      // Add function to remove contributors
+      function removeContributor(index) {
+        state.contributors.items.splice(index, 1);
+        updateContributorsList();
+        updatePreview();
+      }
+
+      // Initialize when DOM is loaded
+      window.addEventListener('DOMContentLoaded', () => {
+        // Show background section properties by default
+        const backgroundSection = document.getElementById('backgroundSection');
+        if (backgroundSection) {
+          backgroundSection.classList.add('active');
+          showPropertyGroup('backgroundProperties');
+          propertiesHeader.textContent = 'Background Properties';
+        }
+
+        // Initialize preview with default state
+        updatePreview();
+      });
 
       function updatePreview() {
         // Update background
@@ -917,7 +1342,8 @@
                 font: 'Inter',
                 weight: 'Regular',
                 position: 'center'
-              }
+              },
+              contributors: state.contributors
             }
           }
         }, '*');
@@ -925,7 +1351,3 @@
     </script>
   </body>
 </html>
-
-
-
-
