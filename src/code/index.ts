@@ -48,7 +48,7 @@ type Contributor = {
 type Styles = {
   heading: { font: string; weight: string; size: number; color: string; position: string };
   description: { font: string; weight: string; size: number; color: string; position: string } | null;
-  background: { color: string; gradient: boolean };
+  background: { color: string; };
   tags: TagStyle[] | null;
   contributors?: {
     items: Contributor[];
@@ -89,21 +89,8 @@ async function createThumbnailCanvas(
   // Calculate the maximum width for content within safe space
   const maxContentWidth = frame.width - (SAFE_SPACE.horizontal * 2);
 
-  // Set background color and gradient
+  // Set background color
   frame.fills = [{ type: 'SOLID', color: hexToRgb(styles.background.color) }];
-  if (styles.background.gradient) {
-    frame.fills = [
-      ...frame.fills,
-      {
-        type: 'GRADIENT_LINEAR',
-        gradientTransform: [[1, 0, 0], [0, 1, 0]],
-        gradientStops: [
-          { position: 0, color: { r: 0, g: 0, b: 0, a: 0 } },
-          { position: 1, color: { r: 0, g: 0, b: 0, a: 0.7 } }
-        ]
-      }
-    ];
-  }
   figma.currentPage.appendChild(frame);
 
   // Create heading text
